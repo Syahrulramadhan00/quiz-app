@@ -4,6 +4,7 @@ import Question from '../../components/Question/Question';
 import QuestionSelector from '../../components/Navbar/QuestionSelector';
 import Navigation from '../../components/Navbar/Navigation';
 import Timer from '../../utils/Timer';
+import { useLocalStorage } from '../../utils/useLocalStorage';
 import { useNavigate } from 'react-router-dom';
 
 const shuffleArray = (array) => {
@@ -15,35 +16,38 @@ const shuffleArray = (array) => {
 };
 
 const Quiz = () => {
-  const [questions, setQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedOptions, setSelectedOptions] = useState({});
-  const [answeredQuestions, setAnsweredQuestions] = useState(new Array(0).fill(false)); // Initialize with zero length
-  const [correctScore, setCorrectScore] = useState(0);
+  const [questions, setQuestions] = useLocalStorage('quizQuestions', []);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useLocalStorage('currentQuestionIndex', 0);
+  const [selectedOptions, setSelectedOptions] = useLocalStorage('quizAnswers', {});
+  const [answeredQuestions, setAnsweredQuestions] = useLocalStorage('answeredQuestions', []);
   const [loading, setLoading] = useState(true);
-  const [isQuizDone, setIsQuizDone] = useState(false);
-  const [timer, setTimer] = useState(30); // Timer state
+  const [isQuizDone, setIsQuizDone] = useLocalStorage('isQuizDone', false);
+  const [timer, setTimer] = useLocalStorage('quizTimer', 360); // Initial timer value
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadQuestions = async () => {
-      try {
-        const data = await fetchQuestions();
-        const shuffledQuestions = data.map((question) => ({
-          ...question,
-          options: shuffleArray([...question.incorrect_answers, question.correct_answer]),
-        }));
-        setQuestions(shuffledQuestions);
-        setAnsweredQuestions(new Array(shuffledQuestions.length).fill(false)); // Update length
-        setLoading(false);
-      } catch (error) {
-        console.error('Error loading questions', error);
-        setLoading(false);
-      }
-    };
+    if (questions.length === 0) {
+      loadQuestions();
+    } else {
+      setLoading(false);
+    }
+  }, [questions]);
 
-    loadQuestions();
-  }, []);
+  const loadQuestions = async () => {
+    try {
+      const data = await fetchQuestions();
+      const shuffledQuestions = data.map((question) => ({
+        ...question,
+        options: shuffleArray([...question.incorrect_answers, question.correct_answer]),
+      }));
+      setQuestions(shuffledQuestions);
+      setAnsweredQuestions(new Array(shuffledQuestions.length).fill(false));
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading questions', error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (isQuizDone) {
@@ -52,19 +56,18 @@ const Quiz = () => {
         userAnswer: selectedOptions[index] || 'Not Answered',
         correctAnswer: question.correct_answer,
       }));
-      localStorage.setItem('quizAnswers', JSON.stringify(quizResults));
-      localStorage.setItem('isQuizDone', 'true');
-      navigate('/dashboard'); // Navigate to dashboard after finishing the quiz
+      setSelectedOptions(quizResults);
+      navigate('/dashboard');
     }
-  }, [isQuizDone, navigate, questions, selectedOptions]);
+  }, [isQuizDone, navigate, questions, selectedOptions, setSelectedOptions]);
 
   const handleOptionChange = (questionIndex, option) => {
-    setSelectedOptions(prev => ({
+    setSelectedOptions((prev) => ({
       ...prev,
-      [questionIndex]: option
+      [questionIndex]: option,
     }));
-    markQuestionAsAnswered(questionIndex); // Mark question as answered
-    handleNext(); // Automatically move to the next question
+    markQuestionAsAnswered(questionIndex);
+    handleNext();
   };
 
   const handleNext = () => {
@@ -88,7 +91,7 @@ const Quiz = () => {
   };
 
   const markQuestionAsAnswered = (index) => {
-    setAnsweredQuestions(prevState => {
+    setAnsweredQuestions((prevState) => {
       const newState = [...prevState];
       newState[index] = true;
       return newState;
@@ -96,6 +99,12 @@ const Quiz = () => {
   };
 
   const currentQuestion = questions[currentQuestionIndex];
+
+  useEffect(() => {
+    if (!isQuizDone) {
+      localStorage.setItem('answeredQuestions', JSON.stringify(answeredQuestions));
+    }
+  }, [answeredQuestions, isQuizDone]);
 
   return (
     <div className="p-6 max-w-xl mx-auto mt-10 bg-white rounded-lg shadow-md">
@@ -106,11 +115,11 @@ const Quiz = () => {
         <div>
           {questions.length > 0 && (
             <>
-              <Timer 
-                timer={timer} 
-                setTimer={setTimer} 
-                isQuizDone={isQuizDone} 
-                handleFinishQuiz={handleFinishQuiz} 
+              <Timer
+                timer={timer}
+                setTimer={setTimer}
+                isQuizDone={isQuizDone}
+                handleFinishQuiz={handleFinishQuiz}
               />
               <Question
                 question={currentQuestion.question}
@@ -118,10 +127,7 @@ const Quiz = () => {
                 selectedOption={selectedOptions[currentQuestionIndex]}
                 onOptionChange={(option) => handleOptionChange(currentQuestionIndex, option)}
               />
-              <Navigation
-                isQuizDone={isQuizDone}
-                onFinishQuiz={handleFinishQuiz}
-              />
+              <Navigation isQuizDone={isQuizDone} onFinishQuiz={handleFinishQuiz} />
               <QuestionSelector
                 questions={questions}
                 currentQuestionIndex={currentQuestionIndex}
