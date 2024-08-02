@@ -1,21 +1,27 @@
 import React from 'react';
 
+const decodeHtmlEntities = (str) => {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = str;
+  return txt.value;
+};
+
 const Question = ({ question, options, selectedOption, onOptionChange }) => (
-  <div>
-    <h2 className="text-xl mb-2">{question}</h2>
-    <div className="mb-4">
+  <div className="mb-4">
+    <h2 className="text-xl font-semibold mb-2" dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(question) }}></h2>
+    <div>
       {options.map((option, index) => (
-        <div key={index} className="mb-2 flex items-center">
-          <input
-            type="radio"
-            id={`option-${index}`}
-            name="quiz-option"
-            value={option}
-            onChange={() => onOptionChange(option)}
-            checked={selectedOption === option}
-            className="mr-2"
-          />
-          <label htmlFor={`option-${index}`} className="text-lg">{option}</label>
+        <div key={index} className="mb-2">
+          <label>
+            <input
+              type="radio"
+              name="option"
+              value={option}
+              checked={selectedOption === option}
+              onChange={() => onOptionChange(option)}
+            />
+            <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(option) }}></span>
+          </label>
         </div>
       ))}
     </div>
