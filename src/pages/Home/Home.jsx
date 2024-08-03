@@ -15,14 +15,13 @@ const Home = () => {
     const isQuizDone = localStorage.getItem('isQuizDone');
     const quizEndTime = JSON.parse(localStorage.getItem('quizEndTime'));
 
-    // Check if there's an ongoing quiz
     if (savedAnswers && quizEndTime) {
       const currentTime = new Date().getTime();
       const remainingTime = quizEndTime - currentTime;
       if (remainingTime > 0) {
-        setQuizOngoing(true); // Quiz is still ongoing
+        setQuizOngoing(true); 
       } else {
-        localStorage.removeItem('quizEndTime'); // Clean up expired quiz end time
+        localStorage.removeItem('quizEndTime'); 
       }
     }
 
@@ -37,13 +36,19 @@ const Home = () => {
     }
   }, []);
 
+  const handleStartQuiz = () => {
+    localStorage.clear(); // Clear all local storage
+    setResults([]);
+    setUnfinishedQuiz(false);
+    setQuizOngoing(false);
+    navigate('/quiz'); // Navigate to the quiz page
+  };
+
   const handleContinue = () => {
     const savedAnswers = JSON.parse(localStorage.getItem('quizAnswers'));
     const isQuizDone = localStorage.getItem('isQuizDone');
 
-    if (isQuizDone === 'true') {
-      navigate('/quiz');
-    } else if (savedAnswers) {
+    if (isQuizDone === 'true' || savedAnswers) {
       navigate('/quiz');
     } else {
       alert('No unfinished quiz found.');
@@ -55,14 +60,14 @@ const Home = () => {
       <Navbar />
       <div className='flex flex-col items-center justify-center mt-28 space-y-4'>
         <div className='space-x-4'>
-          {!unfinishedQuiz && !quizOngoing && (
-            <Link to="/quiz">
-              <button className='btn-primary'>
-                Start Quiz
-              </button>
-            </Link>
-          )}
-          {(unfinishedQuiz || quizOngoing) && (
+          {!unfinishedQuiz && !quizOngoing ? (
+            <button
+              className='btn-primary'
+              onClick={handleStartQuiz}
+            >
+              Start Quiz
+            </button>
+          ) : (
             <button
               className='btn-primary'
               onClick={handleContinue}
