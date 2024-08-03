@@ -22,7 +22,7 @@ const Quiz = () => {
   const [answeredQuestions, setAnsweredQuestions] = useLocalStorage('answeredQuestions', []);
   const [loading, setLoading] = useState(true);
   const [isQuizDone, setIsQuizDone] = useLocalStorage('isQuizDone', false);
-  const [timer, setTimer] = useLocalStorage('quizTimer', 360); // Initial timer value
+  const [timer, setTimer] = useLocalStorage('quizTimer', 360); 
   const navigate = useNavigate();
 
   useEffect(() => {

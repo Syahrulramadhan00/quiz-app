@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../../components/Navbar/Navbar';
 import { Link } from 'react-router-dom';
 import PasswordInput from '../../components/Input/PasswordInput';
 import { validateEmail } from '../../utils/helper';
@@ -47,7 +46,7 @@ const Login = () => {
       <div className='flex items-center justify-center min-h-screen'>
         <div className='w-96 border rounded bg-white px-7 py-10'>
             <form onSubmit={handleLogin}>
-                <h4 className='text-2xl mb-7'>Login</h4>
+                <h4 className='text-2xl mb-7'>Login Quiz</h4>
                 
                 <input 
                   type="text" 
@@ -67,12 +66,8 @@ const Login = () => {
                 <button type='submit' className='btn-primary'>
                   Login
                 </button>
-
                 <p className='text-sm text-center mt-4'>
-                  Not registered yet?{" "}
-                  <Link to="/signUp" className="font-medium text-primary underline"> 
-                    Create an Account
-                  </Link>
+                Please log in using your email and password.
                 </p>
             </form>
         </div>
